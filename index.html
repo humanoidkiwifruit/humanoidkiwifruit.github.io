@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Haha, ha, one!</title>
+
+  <style>
+  </style>
+</head>
+<body>
+
+  <main>
+    <h1>Hello, World!</h1>
+    <input type="file" id="fileInput">
+  </main>
+
+  <script>
+  const fileInput = document.getElementById('fileInput');
+  fileInput.addEventListener('change', async (event) => {
+    console.log("new file")
+    const file = event.target.files[0]
+    if (!file) {
+      console.log("no file")
+      return
+    }
+    console.log("file")
+    const buffer = await file.arrayBuffer();
+    const bytes = new Uint8Array(buffer);
+    for (const byte of bytes) {
+      for (let i = 7; i >= 0; i--) {
+        console.log((byte >> i) & 1);
+      }
+    }
+
+
+  })
+  </script>
+
+</body>
+</html>
