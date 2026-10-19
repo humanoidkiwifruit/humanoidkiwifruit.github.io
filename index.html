@@ -1,41 +1,107 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Haha, ha, one!</title>
-
-  <style>
-  </style>
+  <title>110001010001010</title>
 </head>
 <body>
-
   <main>
-    <h1>Hello, World!</h1>
-    <input type="file" id="fileInput">
+    <h1>101010101001</h1>
+    <input type="file" id="fileInput" />
+    <button id="stopButton">Stop</button>
+    <p id="status">Choose a file to begin.</p>
   </main>
 
   <script>
-  const fileInput = document.getElementById('fileInput');
-  fileInput.addEventListener('change', async (event) => {
-    console.log("new file")
-    const file = event.target.files[0]
-    if (!file) {
-      console.log("no file")
-      return
+    const fileInput = document.getElementById('fileInput');
+    const stopButton = document.getElementById('stopButton');
+    const status = document.getElementById('status');
+
+    const zeroAudio = new Audio('./normal0.wav');
+    const oneAudio = new Audio('./normal1.wav');
+
+    let stopped = false;
+
+    // Play an audio file and wait for it to finish.
+    function playSound(audio) {
+      return new Promise((resolve, reject) => {
+        audio.currentTime = 0;
+
+        const cleanup = () => {
+          audio.removeEventListener('ended', onEnded);
+          audio.removeEventListener('error', onError);
+        };
+
+        const onEnded = () => {
+          cleanup();
+          resolve();
+        };
+
+        const onError = () => {
+          cleanup();
+          reject(new Error('Could not load audio file.'));
+        };
+
+        audio.addEventListener('ended', onEnded);
+        audio.addEventListener('error', onError);
+
+        audio.play().catch(error => {
+          cleanup();
+          reject(error);
+        });
+      });
     }
-    console.log("file")
-    const buffer = await file.arrayBuffer();
-    const bytes = new Uint8Array(buffer);
-    for (const byte of bytes) {
-      for (let i = 7; i >= 0; i--) {
-        console.log((byte >> i) & 1);
+
+    fileInput.addEventListener('change', async (event) => {
+      const file = event.target.files[0];
+
+      if (!file) return;
+
+      stopped = false;
+
+      const buffer = await file.arrayBuffer();
+      const bytes = new Uint8Array(buffer);
+
+      const bits = [];
+
+      for (const byte of bytes) {
+        for (let i = 7; i >= 0; i--) {
+          bits.push((byte >> i) & 1);
+        }
       }
-    }
 
+      status.textContent =
+        `Reading ${bits.length} bits from ${file.name}...`;
 
-  })
+      try {
+        for (let i = 0; i < bits.length; i++) {
+          if (stopped) break;
+
+          const bit = bits[i];
+          status.textContent =
+            `Bit ${i + 1} of ${bits.length}: ${bit}`;
+
+          await playSound(bit === 0 ? zeroAudio : oneAudio);
+        }
+
+        status.textContent = stopped
+          ? 'Reading stopped.'
+          : 'Finished reading the file.';
+      } catch (error) {
+        status.textContent = error.message;
+        console.error(error);
+      }
+    });
+
+    stopButton.addEventListener('click', () => {
+      stopped = true;
+      zeroAudio.pause();
+      oneAudio.pause();
+      zeroAudio.currentTime = 0;
+      oneAudio.currentTime = 0;
+    });
   </script>
-
 </body>
 </html>
